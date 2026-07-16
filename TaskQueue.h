@@ -29,8 +29,11 @@ public:
 
     //添加任务
     void addTask(Task task);
+    void addTask(callback func, void* arg);
+
     //取出任务
-    void takeTask();
+    Task takeTask();
+
     //获取当前任务个数
     inline int taskNumber(){
         return m_taskQ.size();
