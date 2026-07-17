@@ -4,12 +4,11 @@
 class ThreadPool{
 public:
     // 创建线程池。
-    // main：线程池中最少保留的工作线程数（此参数通常命名为 min）。
+    // min：线程池中最少保留的工作线程数
     // max：线程池允许创建的最大工作线程数。
-    ThreadPool(int main, int max);
+    ThreadPool(int min, int max);
 
-    // 销毁线程池：通知线程退出，并释放线程、互斥锁、条件变量和任务队列等资源。
-    ~ThreadPool();    
+    ~ThreadPool();
     
     // 向任务队列中添加一个待执行任务，并唤醒等待任务的工作线程。
     void addTask(Task task);
