@@ -14,6 +14,7 @@ ThreadPool::ThreadPool (int min, int max){
         m_maxNum = max;
         m_busyNum = 0;
         m_aliveNum = min;
+        m_exitNum = 0;
 
         //根据线程最大上限给线程组分配内存
         m_threadIDs = new pthread_t[max];
@@ -92,7 +93,6 @@ void* ThreadPool::worker(void* arg){
         //执行任务
         cout << "thread" << to_string(pthread_self()) << "start working..." << endl;
         task.function(task.arg);
-        delete task.arg;
         task.arg = nullptr;
 
         //任务处理结束
@@ -101,18 +101,6 @@ void* ThreadPool::worker(void* arg){
         pool->m_busyNum--;
         pthread_mutex_unlock(&pool->m_lock);
     }
-}
-
-//线程退出函数,将工作线程从线程池中移除，然后结束当前线程
-void ThreadPool::threadExit(){
-    pthread_t tid = pthread_self();
-    for(int i=0; i<m_maxNum; ++i){
-        cout << "threadExit() function: thread" << to_string(pthread_self()) << "Exiting..." << endl;
-        //将线程池中id置为0
-        m_threadIDs[i] = 0;
-        break;
-    }
-    pthread_exit(NULL);
 }
 
 //管理者线程任务函数
@@ -138,10 +126,10 @@ void* ThreadPool::manager(void* arg){
             pthread_mutex_lock(&pool->m_lock);
             int num = 0;
             for(int i = 0; i<pool->m_maxNum && num<NUMBER && pool->m_aliveNum<pool->m_maxNum; ++i){
-                if(pool->m_threadIDs[i] = 0){
+                if(pool->m_threadIDs[i] == 0){
                     pthread_create(&pool->m_threadIDs[i],NULL, worker, pool);
                     num++;
-                    pool->m_aliveNum;
+                    pool->m_aliveNum++;
                 }
             }
             pthread_mutex_unlock(&pool->m_lock);
@@ -175,7 +163,7 @@ void ThreadPool::addTask(Task task){
 
 int ThreadPool::getAliveNumber(){
     pthread_mutex_lock(&m_lock);
-    int threadNum = m_busyNum;
+    int threadNum = m_aliveNum;
     pthread_mutex_unlock(&m_lock);
     return threadNum;
 }
@@ -183,7 +171,7 @@ int ThreadPool::getAliveNumber(){
 
 int ThreadPool::getBusyNumber(){
     pthread_mutex_lock(&m_lock);
-    int busyNum = m_aliveNum;
+    int busyNum = m_busyNum;
     pthread_mutex_unlock(&m_lock);
     return busyNum;
 }
@@ -200,5 +188,4 @@ void ThreadPool::threadExit(){
     }
     pthread_exit(NULL);
 }
-
 
